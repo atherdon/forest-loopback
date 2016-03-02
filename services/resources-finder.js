@@ -3,10 +3,13 @@ var _ = require('lodash');
 var OperatorValueParser = require('./operator-value-parser');
 var Schemas = require('../generators/schemas');
 var P = require('bluebird');
+var Inflector = require('inflected');
+
 
 function ResourcesFinder(model, opts, params) {
-  var schema = Schemas.schemas[model.name];
-
+  var resourceName = Inflector.pluralize(Inflector.underscore(model.modelName)).toLowerCase();
+  var schema = Schemas.schemas[resourceName];
+  
   function getIncludes() {
     var includes = [{ all: true }];
 
@@ -40,7 +43,7 @@ function ResourcesFinder(model, opts, params) {
         order = 'DESC';
       }
 
-      sort.push([params.sort, order]);
+      sort.push(params.sort + ' ' + order);
     }
 
     return sort;
@@ -62,14 +65,27 @@ function ResourcesFinder(model, opts, params) {
 
     //     return [result.count, records];
     //   });
+    var queryParams = {
+          limit: getLimit(),
+          skip: getSkip(),
+          where: getWhere()
+        };
+    if (getOrder().length !== 0) {
+        queryParams.order = getOrder();
+    }
+    
     return model
-      .find()
+      .find(queryParams)
       .then(function (results) {
         var records = results.map(function (r) {
           return r.toJSON();
         });
+        
+        // Get the total number of records
+        return model.count().then(function(total){
+            return [total, records];            
+        })
 
-        return [results.length, records];
       });
   }
 
@@ -81,13 +97,13 @@ function ResourcesFinder(model, opts, params) {
       var q = {};
 
       if (field.type === 'String') {
-        q[field.field] = { $like: '%' + params.search + '%' };
+        q[field.field] = { like: '%' + params.search + '%' };
+        or.push(q);
       }
 
-      or.push(q);
     });
 
-    where.$or = or;
+    where.or = or;
     return where;
   }
 
@@ -105,7 +121,7 @@ function ResourcesFinder(model, opts, params) {
       and.push(q);
     });
 
-    where.$and = and;
+    where.and = and;
     return where;
   }
 
