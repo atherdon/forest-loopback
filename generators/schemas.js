@@ -1,6 +1,7 @@
 'use strict';
 var P = require('bluebird');
-var SchemaAdapter = require('../adapters/sequelize');
+var SchemaAdapter = require('../adapters/loopback');
+var Inflector = require('inflected');
 
 module.exports = {
   schemas: [],
@@ -12,7 +13,8 @@ module.exports = {
 
       return new SchemaAdapter(model, opts)
         .then(function (schema) {
-          that.schemas[model.tableName] = schema;
+          var resourceName = Inflector.pluralize(Inflector.underscore(model.modelName)).toLowerCase();
+          that.schemas[resourceName] = schema;
         });
     });
   }

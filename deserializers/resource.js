@@ -3,9 +3,11 @@ var _ = require('lodash');
 var P = require('bluebird');
 var humps = require('humps');
 var Schemas = require('../generators/schemas');
+var Inflector = require('inflected');
 
 function ResourceDeserializer(model, params) {
-  var schema = Schemas.schemas[model.tableName];
+  var resourceName = Inflector.pluralize(Inflector.underscore(model.modelName)).toLowerCase();
+  var schema = Schemas.schemas[resourceName];
 
   function extractAttributes() {
     return new P(function (resolve) {

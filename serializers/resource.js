@@ -5,7 +5,8 @@ var Inflector = require('inflected');
 var Schemas = require('../generators/schemas');
 
 function ResourceSerializer(model, records, opts, meta) {
-  var schema = Schemas.schemas[model.tableName];
+  var resourceName = Inflector.pluralize(Inflector.underscore(model.modelName)).toLowerCase();
+  var schema = Schemas.schemas[resourceName];
 
   this.perform = function () {
     var typeForAttributes = {};
@@ -29,8 +30,10 @@ function ResourceSerializer(model, records, opts, meta) {
             attributes: _.map(referenceSchema.fields, 'field'),
             relationshipLinks: {
               related: function (dataSet, relationship) {
+                // FIXME - use a Util Fn to return this from a central location
+                var resourcePath = Inflector.pluralize(Inflector.underscore(model.modelName)).toLowerCase();
                 var ret = {
-                  href: '/forest/' + model.tableName + '/' +
+                  href: '/forest/' + resourcePath + '/' +
                     dataSet.id + '/' + field.field,
                 };
 
@@ -64,8 +67,8 @@ function ResourceSerializer(model, records, opts, meta) {
 
     getAttributesFor(serializationOptions, schema.fields);
 
-    return new JSONAPISerializer(schema.name, records,
-      serializationOptions);
+    return new JSONAPISerializer(schema.name,
+      serializationOptions).serialize(records);
   };
 }
 

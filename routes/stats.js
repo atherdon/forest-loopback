@@ -37,7 +37,7 @@ module.exports = function (app, model, opts) {
   };
 
   this.perform = function () {
-    var modelName = Inflector.underscore(model.name).toLowerCase();
+    var modelName = Inflector.underscore(model.modelName).toLowerCase();
 
     app.post('/forest/stats/' + modelName, auth.ensureAuthenticated,
       this.create);

@@ -7,14 +7,15 @@ var ResourceRemover = require('../services/resource-remover');
 var ResourceSerializer = require('../serializers/resource');
 var ResourceDeserializer = require('../deserializers/resource');
 var auth = require('../services/auth');
+var Inflector = require('inflected');
 
 module.exports = function (app, model, opts) {
   this.list = function (req, res, next) {
     return new ResourcesFinder(model, opts, req.query)
       .perform()
-      .spread(function (count, records) {
-        return new ResourceSerializer(model, records, opts, {
-          count: count
+      .then(function (result) {
+        return new ResourceSerializer(model, result.records, opts, {
+          count: result.count
         }, req.query.include).perform();
       })
       .then(function (records) {
@@ -79,21 +80,21 @@ module.exports = function (app, model, opts) {
   };
 
   this.perform = function () {
-    var modelName = model.tableName;
+    var resourcePath = Inflector.pluralize(Inflector.underscore(model.modelName)).toLowerCase();
 
-    app.get('/forest/' + modelName, auth.ensureAuthenticated,
+    app.get('/forest/' + resourcePath, auth.ensureAuthenticated,
       this.list);
 
-    app.get('/forest/' + modelName + '/:recordId', auth.ensureAuthenticated,
+    app.get('/forest/' + resourcePath + '/:recordId', auth.ensureAuthenticated,
       this.get);
 
-    app.post('/forest/' + modelName, auth.ensureAuthenticated,
+    app.post('/forest/' + resourcePath, auth.ensureAuthenticated,
       this.create);
 
-    app.put('/forest/' + modelName + '/:recordId', auth.ensureAuthenticated,
+    app.put('/forest/' + resourcePath + '/:recordId', auth.ensureAuthenticated,
       this.update);
 
-    app.delete('/forest/' + modelName + '/:recordId', auth.ensureAuthenticated,
+    app.delete('/forest/' + resourcePath + '/:recordId', auth.ensureAuthenticated,
       this.remove);
   };
 };

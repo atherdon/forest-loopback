@@ -10,7 +10,7 @@ var AssociationsRoutes = require('./routes/associations');
 var StatRoutes = require('./routes/stats');
 var SessionRoute = require('./routes/sessions');
 var Schemas = require('./generators/schemas');
-var SchemaAdapter = require('./adapters/sequelize');
+var SchemaAdapter = require('./adapters/loopback');
 var JSONAPISerializer = require('jsonapi-serializer').Serializer;
 var request = require('superagent');
 var logger = require('./services/logger');
@@ -56,7 +56,7 @@ exports.init = function (opts) {
   new SessionRoute(app, opts).perform();
 
   // Init
-  new P(function (resolve) { resolve(opts.sequelize.models); })
+  new P(function (resolve) { resolve(opts.loopback.models); })
     .then(function (models) {
       return Schemas.perform(models, opts)
         .then(function () {
@@ -74,7 +74,7 @@ exports.init = function (opts) {
           return new SchemaAdapter(model, opts);
         })
         .then(function (collections) {
-          return new JSONAPISerializer('collections', collections, {
+          return new JSONAPISerializer('collections', {
             id: 'name',
             attributes: ['name', 'fields'],
             fields: {
@@ -82,13 +82,13 @@ exports.init = function (opts) {
                 'collection_name']
             },
             meta: {
-              'liana': 'forest-express-sequelize',
+              'liana': 'forest-express-loopback',
               'liana_version': require('./package.json').version
             },
             keyForAttribute: function (key) {
               return Inflector.camelize(key, false);
             }
-          });
+          }).serialize(collections);
         })
         .then(function (json) {
           var forestUrl = process.env.FOREST_URL ||

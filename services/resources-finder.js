@@ -2,6 +2,7 @@
 var _ = require('lodash');
 var OperatorValueParser = require('./operator-value-parser');
 var Schemas = require('../generators/schemas');
+var P = require('bluebird');
 
 function ResourcesFinder(model, opts, params) {
   var schema = Schemas.schemas[model.name];
@@ -46,20 +47,29 @@ function ResourcesFinder(model, opts, params) {
   }
 
   function getRecords() {
+    // return model
+    //   .findAndCountAll({
+    //     include: getIncludes(),
+    //     limit: getLimit(),
+    //     offset: getSkip(),
+    //     where: getWhere(),
+    //     order: getOrder()
+    //   })
+    //   .then(function (result) {
+    //     var records = result.rows.map(function (r) {
+    //       return r.toJSON();
+    //     });
+
+    //     return [result.count, records];
+    //   });
     return model
-      .findAndCountAll({
-        include: getIncludes(),
-        limit: getLimit(),
-        offset: getSkip(),
-        where: getWhere(),
-        order: getOrder()
-      })
-      .then(function (result) {
-        var records = result.rows.map(function (r) {
+      .find()
+      .then(function (results) {
+        var records = results.map(function (r) {
           return r.toJSON();
         });
 
-        return [result.count, records];
+        return [results.length, records];
       });
   }
 
@@ -134,10 +144,11 @@ function ResourcesFinder(model, opts, params) {
   }
 
   this.perform = function () {
-    return getRecords()
-      .spread(function (count, records) {
-        return [count, records];
-      });
+    return new P(function(resolve,reject) {
+        getRecords().then(function(results) {
+            resolve({count : results[0], records : results[1]});
+        });
+    });
   };
 }
 

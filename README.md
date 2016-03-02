@@ -7,11 +7,11 @@ The official Express/Sequelize liana for Forest.
 1. Run `$ npm install forest-express-sequelize --save`
 2. Add the following code to your `app.js` file:
 ```javascript
-app.use(require('forest-express-sequelize').init({
-  modelsDir: __dirname + '/models',  // The directory where all of your Sequelize models are defined.
+app.use(require('forest-express-loopback').init({
+  modelsDir: __dirname + '/../common/models',  // The directory where all of your Loopback models are defined.
   secretKey: 'ultrasecretkey', // The secret key given my Forest.
   authKey: 'catsOnKeyboard', // Choose a secret authentication key.
-  sequelize: require('sequelize') // The sequelize instance given by require('sequelize').
+  loopback: require('loopback') // The sequelize instance given by require('sequelize').
 }));
 ```
 
