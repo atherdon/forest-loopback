@@ -24,18 +24,19 @@ module.exports = function (model, opts) {
   }
 
   function getTypeForAssociation(association) {
-    switch (association.associationType) {
-      case 'BelongsTo':
-      case 'HasOne':
-        return 'Number';
-      case 'HasMany':
-      case 'BelongsToMany':
-        return ['Number'];
+    switch (association.type) {
+      case 'belongsTo':
+      case 'hasOne':
+        return 'String';
+      case 'hasMany':
+      case 'belongsToMany':
+        return ['String'];
     }
   }
 
   function getInverseOf(association) {
-    return association.source.options.name.pluralize;
+    var resourceName = Inflector.pluralize(Inflector.underscore(model.modelName)).toLowerCase();
+    return resourceName;
   }
 
   function getSchemaForColumn(fieldName, type) {
@@ -43,16 +44,18 @@ module.exports = function (model, opts) {
     return schema;
   }
 
-//   function getSchemaForAssociation(association) {
-//     var schema = {
-//       field: association.associationAccessor,
-//       type: getTypeForAssociation(association),
-//       reference: association.target.options.name.plural + '.id',
-//       inverseOf: getInverseOf(association)
-//     };
+  function getSchemaForAssociation(association) {
+    var referenceName = Inflector.pluralize(Inflector.underscore(association.modelTo.modelName)).toLowerCase();
+    var schema = {
+      field: association.keyFrom,
+      type: getTypeForAssociation(association),
+      reference: referenceName,
+      inverseOf: getInverseOf(association)
+    };
 
-//     return schema;
-//   }
+    return schema;
+  }
+  
   var idKey = 'id';
   var columns = P
     .each(_.keys(model.definition.properties), function (columnName) {
@@ -64,13 +67,13 @@ module.exports = function (model, opts) {
       fields.push(schema);
     });
 
-//   var associations = P
-//     .each(_.values(model.associations), function (association) {
-//       var schema = getSchemaForAssociation(association);
-//       fields.push(schema);
-//     });
+  var associations = P
+    .each(_.values(model.relations), function (association) {
+      var schema = getSchemaForAssociation(association);
+      fields.push(schema);
+    });
 
-  return P.all([columns])
+  return P.all([columns,associations])
     .then(function () {
       return {
         name: model.pluralModelName,

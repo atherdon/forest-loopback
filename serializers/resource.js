@@ -11,6 +11,14 @@ function ResourceSerializer(model, records, opts, meta) {
   this.perform = function () {
     var typeForAttributes = {};
 
+    function getTypeForAttribute(fieldType) {
+        if (_.isArray(fieldType)) {
+            return fieldType[0];
+        } else {
+            return fieldType;
+        }
+    }
+    
     function getAttributesFor(dest, fields) {
       _.map(fields, function (field) {
         if (_.isPlainObject(field.type)) {
@@ -20,12 +28,12 @@ function ResourceSerializer(model, records, opts, meta) {
 
           getAttributesFor(dest[field.field], field.type.fields);
         } else if (field.reference) {
-          var referenceType = typeForAttributes[field.field] =
-            field.reference.substring(0, field.reference.length -
-              '.id'.length);
+          var referenceType = typeForAttributes[field.field] = field.reference;
+          
 
           var referenceSchema = Schemas.schemas[referenceType];
           dest[field.field] = {
+            // Hmmm - This probably can't be hardcoded
             ref: 'id',
             attributes: _.map(referenceSchema.fields, 'field'),
             relationshipLinks: {

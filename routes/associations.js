@@ -36,9 +36,9 @@ module.exports = function (app, model, opts) {
   }
 
   this.perform = function () {
-    var modelName = model.tableName;
+    var resourcePath = Inflector.pluralize(Inflector.underscore(model.modelName)).toLowerCase();
 
-    app.get('/forest/' + modelName + '/:recordId/:associationName',
+    app.get('/forest/' + resourcePath + '/:recordId/:associationName',
       auth.ensureAuthenticated, index);
   };
 };
