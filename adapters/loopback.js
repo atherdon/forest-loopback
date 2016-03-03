@@ -5,22 +5,21 @@ var Inflector = require('inflected');
 
 module.exports = function (model, opts) {
   var fields = [];
-  var DataTypes = opts.loopback.loopback;
 
-  // Map loopback types to the 4 forest admin recognized types
-  function getTypeFor(column) {
-    if (column.type instanceof DataTypes.STRING) {
-      return 'String';
-    } else if (column.type instanceof DataTypes.BOOLEAN) {
-      return 'Boolean';
-    } else if (column.type instanceof DataTypes.DATE) {
+  // FIXME - Map loopback types to the 4 forest admin recognized types
+  function getTypeFor(type) {
+    if (type === 'date') {
       return 'Date';
-    } else if (column.type instanceof DataTypes.INTEGER ||
-      column.type instanceof DataTypes.FLOAT ||
-      column.type instanceof DataTypes['DOUBLE PRECISION']) {
+    } else if (type === 'boolean') {
+      return 'Boolean';
+    } else if (type === 'number') {
       return 'Number';
-    } else if (column.type.type) {
-      return [getTypeFor({ type: column.type.type })];
+    } else if (type === 'any') {
+      return 'String';
+    } else if (type === 'geopoint') {
+      return 'String';
+    } else {
+      return type;
     }
   }
 
@@ -54,12 +53,14 @@ module.exports = function (model, opts) {
 
 //     return schema;
 //   }
-
+  var idKey = 'id';
   var columns = P
     .each(_.keys(model.definition.properties), function (columnName) {
-      //if (column.references) { return; }
       var column = model.definition.properties[columnName];
       var schema = getSchemaForColumn(columnName, column.type);
+      if (typeof column.id !== 'undefined' && column.id ) {
+          idKey = columnName;
+      }
       fields.push(schema);
     });
 
@@ -73,7 +74,8 @@ module.exports = function (model, opts) {
     .then(function () {
       return {
         name: model.pluralModelName,
-        fields: fields
+        fields: fields,
+        idKey: idKey
       };
     });
 };

@@ -62,7 +62,8 @@ function ResourceSerializer(model, records, opts, meta) {
       typeForAttribute: function (attribute) {
         return typeForAttributes[attribute] || attribute;
       },
-      meta: meta
+      meta: meta,
+      id : schema.idKey
     };
 
     getAttributesFor(serializationOptions, schema.fields);
