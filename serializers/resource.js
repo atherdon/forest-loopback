@@ -39,10 +39,11 @@ function ResourceSerializer(model, records, opts, meta) {
             relationshipLinks: {
               related: function (dataSet, relationship) {
                 // FIXME - use a Util Fn to return this from a central location
-                var resourcePath = Inflector.pluralize(Inflector.underscore(model.modelName)).toLowerCase();
+                //var resourcePath = Inflector.pluralize(Inflector.underscore(model.modelName)).toLowerCase();
+                var resourcePath = model.modelName;
                 var ret = {
                   href: '/forest/' + resourcePath + '/' +
-                    dataSet.id + '/' + field.field,
+                    dataSet[dest.id] + '/' + field.field,
                 };
 
                 if (_.isArray(field.type)) {

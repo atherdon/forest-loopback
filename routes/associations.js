@@ -19,14 +19,14 @@ module.exports = function (app, model, opts) {
 
   function index(req, res, next) {
     var params = _.extend(req.query, req.params);
-    var associationModel = opts.sequelize.models[
+    var associationModel = opts.loopback.models[
       getAssociationModel(req.params.associationName)];
 
     return new HasManyFinder(model, associationModel, opts, params)
       .perform()
-      .spread(function (count, records) {
-        return new ResourceSerializer(associationModel, records, opts, {
-          count: count
+      .then(function (result) {
+        return new ResourceSerializer(associationModel, result.records, opts, {
+          count: result.count
         }).perform();
       })
       .then(function (records) {
@@ -36,7 +36,8 @@ module.exports = function (app, model, opts) {
   }
 
   this.perform = function () {
-    var resourcePath = Inflector.pluralize(Inflector.underscore(model.modelName)).toLowerCase();
+    //var resourcePath = Inflector.pluralize(Inflector.underscore(model.modelName)).toLowerCase();
+    var resourcePath = model.modelName;
 
     app.get('/forest/' + resourcePath + '/:recordId/:associationName',
       auth.ensureAuthenticated, index);

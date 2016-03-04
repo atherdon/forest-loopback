@@ -80,7 +80,7 @@ module.exports = function (app, model, opts) {
   };
 
   this.perform = function () {
-    var resourcePath = Inflector.pluralize(Inflector.underscore(model.modelName)).toLowerCase();
+    var resourcePath = model.modelName;
 
     app.get('/forest/' + resourcePath, auth.ensureAuthenticated,
       this.list);
