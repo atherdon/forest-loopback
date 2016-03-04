@@ -13,7 +13,7 @@ module.exports = {
 
       return new SchemaAdapter(model, opts)
         .then(function (schema) {
-          that.schemas[modelName] = schema;
+          that.schemas[model.modelName] = schema;
         });
     });
   }

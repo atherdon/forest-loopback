@@ -35,8 +35,11 @@ module.exports = function (model, opts) {
   }
 
   function getInverseOf(association) {
-    var resourceName = Inflector.pluralize(Inflector.underscore(model.modelName)).toLowerCase();
-    return resourceName;
+    return association.modelFrom.modelName;
+  }
+  
+  function getReferenceType(association) {
+      return association.modelTo.modelName + '.' + association.keyFrom;
   }
 
   function getSchemaForColumn(fieldName, type) {
@@ -45,11 +48,10 @@ module.exports = function (model, opts) {
   }
 
   function getSchemaForAssociation(association) {
-    var referenceName = Inflector.pluralize(Inflector.underscore(association.modelTo.modelName)).toLowerCase();
     var schema = {
-      field: association.keyFrom,
+      field: association.name,
       type: getTypeForAssociation(association),
-      reference: referenceName,
+      reference: getReferenceType(association),
       inverseOf: getInverseOf(association)
     };
 
@@ -73,10 +75,13 @@ module.exports = function (model, opts) {
       fields.push(schema);
     });
 
-  return P.all([columns,associations])
+  return P.all([
+      columns,
+      associations
+      ])
     .then(function () {
       return {
-        name: model.pluralModelName,
+        name: model.modelName,
         fields: fields,
         idKey: idKey
       };

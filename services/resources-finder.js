@@ -10,7 +10,7 @@ function ResourcesFinder(model, opts, params) {
   var schema = Schemas.schemas[model.modelName];
   
   function getIncludes() {
-    var includes = [{ all: true }];
+    var includes = Object.keys(model.relations);
 
     _.each(params.filter, function (value, key) {
       if (key.indexOf(':') > -1) {
