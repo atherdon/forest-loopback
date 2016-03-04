@@ -13,8 +13,7 @@ module.exports = {
 
       return new SchemaAdapter(model, opts)
         .then(function (schema) {
-          var resourceName = Inflector.pluralize(Inflector.underscore(model.modelName)).toLowerCase();
-          that.schemas[resourceName] = schema;
+          that.schemas[modelName] = schema;
         });
     });
   }

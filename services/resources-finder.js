@@ -7,8 +7,7 @@ var Inflector = require('inflected');
 
 
 function ResourcesFinder(model, opts, params) {
-  var resourceName = Inflector.pluralize(Inflector.underscore(model.modelName)).toLowerCase();
-  var schema = Schemas.schemas[resourceName];
+  var schema = Schemas.schemas[model.modelName];
   
   function getIncludes() {
     var includes = [{ all: true }];

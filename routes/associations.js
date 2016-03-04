@@ -9,7 +9,7 @@ var Schemas = require('../generators/schemas');
 module.exports = function (app, model, opts) {
 
   function getAssociationModel(associationName) {
-    var schema = Schemas.schemas[model.tableName];
+    var schema = Schemas.schemas[model.modelName];
     var field = _.findWhere(schema.fields, { field: associationName });
     if (field && field.reference) {
       var referenceName = field.reference.split('.')[0];

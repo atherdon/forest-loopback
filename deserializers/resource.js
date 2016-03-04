@@ -6,8 +6,7 @@ var Schemas = require('../generators/schemas');
 var Inflector = require('inflected');
 
 function ResourceDeserializer(model, params) {
-  var resourceName = Inflector.pluralize(Inflector.underscore(model.modelName)).toLowerCase();
-  var schema = Schemas.schemas[resourceName];
+  var schema = Schemas.schemas[model.modelName];
 
   function extractAttributes() {
     return new P(function (resolve) {

@@ -5,8 +5,7 @@ var Inflector = require('inflected');
 var Schemas = require('../generators/schemas');
 
 function ResourceSerializer(model, records, opts, meta) {
-  var resourceName = Inflector.pluralize(Inflector.underscore(model.modelName)).toLowerCase();
-  var schema = Schemas.schemas[resourceName];
+  var schema = Schemas.schemas[model.modelName];
 
   this.perform = function () {
     var typeForAttributes = {};
@@ -28,8 +27,9 @@ function ResourceSerializer(model, records, opts, meta) {
 
           getAttributesFor(dest[field.field], field.type.fields);
         } else if (field.reference) {
-          var referenceType = typeForAttributes[field.field] = field.reference;
-          
+          var referenceType = typeForAttributes[field.field] =
+            field.reference.split('.')[0];
+
 
           var referenceSchema = Schemas.schemas[referenceType];
           dest[field.field] = {
