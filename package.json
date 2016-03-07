@@ -1,6 +1,6 @@
 {
   "name": "forest-express-loopback",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Forest Liana for Expressjs and Loopback",
   "main": "index.js",
   "scripts": {},
