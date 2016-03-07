@@ -4,24 +4,36 @@ var P = require('bluebird');
 
 function HasManyFinder(model, association, opts, params) {
   function count() {
-    model.findById(params.recordId)
+    return model.findById(params.recordId)
       .then(function (record) {
-        return record['get' + _.capitalize(params.associationName)]();
+        return (record[params.associationName].count)();
       })
-      .then(function (records) {
-        return records.length;
-      });
+      .then(function (count) {
+        return count;
+      })
+      ;
   }
 
   function getRecords() {
-    return model
-      .findById(params.recordId)
+    var fieldsFilter = {};
+    fieldsFilter[params.associationName] = true;
+
+      return model
+      .findById(params.recordId, {include : params.associationName})
       .then(function (record) {
-        return record['get' + _.capitalize(params.associationName)]({
-          offset: getSkip(),
-          limit: getLimit()
-        });
-      });
+            return new P(function (resolve, reject) {
+                record[params.associationName].apply(this, [{
+                    limit: getLimit(),
+                    skip: getSkip()
+                }, function(err, results){
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(results);
+                    }
+                }]);
+            });
+    });
   }
 
   function hasPagination() {
@@ -45,7 +57,13 @@ function HasManyFinder(model, association, opts, params) {
   }
 
   this.perform = function () {
-    return P.all([count(), getRecords()]);
+    return P.all([
+        count(),
+        getRecords()
+        ])
+    .then(function(results){
+        return {count : results[0], records: results[1]};
+    });
   };
 }
 

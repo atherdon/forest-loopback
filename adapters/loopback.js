@@ -52,7 +52,7 @@ module.exports = function (model, opts) {
       field: association.name,
       type: getTypeForAssociation(association),
       reference: getReferenceType(association),
-      inverseOf: getInverseOf(association)
+      inverseOf: null//getInverseOf(association)
     };
 
     return schema;
