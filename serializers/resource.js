@@ -66,7 +66,7 @@ function ResourceSerializer(model, records, opts, meta) {
     var serializationOptions = {
       attributes: _.map(schema.fields, 'field'),
       keyForAttribute: function (key) {
-        return Inflector.underscore(key);
+        return key;
       },
       typeForAttribute: function (attribute) {
         return typeForAttributes[attribute] || attribute;
