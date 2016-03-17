@@ -14,7 +14,6 @@ function ResourceUpdater(model, params) {
       .findById(params[schema.idKey])
       .then(function(instance){
           return instance.updateAttributes(
-            where,
             params
           );
       })
