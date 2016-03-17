@@ -96,7 +96,7 @@ function ResourcesFinder(model, opts, params) {
     _.each(schema.fields, function (field) {
       var q = {};
 
-      if (field.type === 'String') {
+      if (field.type === 'String' && !field.reference) {
         q[field.field] = { like: '%' + params.search + '%' };
         or.push(q);
       }
