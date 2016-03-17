@@ -12,22 +12,22 @@ function ResourcesFinder(model, opts, params) {
   function getIncludes() {
     var includes = Object.keys(model.relations);
 
-    _.each(params.filter, function (value, key) {
-      if (key.indexOf(':') > -1) {
-        var splitted = key.split(':');
-        var associationName = splitted[0];
-        var fieldName = splitted[1];
+    // _.each(params.filter, function (value, key) {
+    //   if (key.indexOf(':') > -1) {
+    //     var splitted = key.split(':');
+    //     var associationName = splitted[0];
+    //     var fieldName = splitted[1];
 
-        var where = {};
-        where[fieldName] = new OperatorValueParser()
-          .perform(model, key, value);
+    //     var where = {};
+    //     where[fieldName] = new OperatorValueParser()
+    //       .perform(model, key, value);
 
-        includes.push({
-          model: model.associations[associationName].target,
-          where: where
-        });
-      }
-    });
+    //     includes.push({
+    //       model: model.associations[associationName].target,
+    //       where: where
+    //     });
+    //   }
+    // });
 
     return includes;
   }
@@ -67,7 +67,8 @@ function ResourcesFinder(model, opts, params) {
     var queryParams = {
           limit: getLimit(),
           skip: getSkip(),
-          where: getWhere()
+          where: getWhere(),
+          include : getIncludes()
         };
     if (getOrder().length !== 0) {
         queryParams.order = getOrder();
