@@ -2,7 +2,18 @@
 var _ = require('lodash');
 var P = require('bluebird');
 
-function HasManyFinder(model, association, opts, params) {
+function HasManyGetter(model, association, opts, params) {
+  function getIncludes() {
+    return _.chain(association.relations)
+      .filter(function (relation) {
+        return ['hasOne', 'belongsTo'].indexOf(relation.type) > -1;
+      })
+      .map(function (relation) {
+        return relation.name;
+      })
+      .value();
+  }
+
   function count() {
     return model.findById(params.recordId)
       .then(function (record) {
@@ -10,30 +21,27 @@ function HasManyFinder(model, association, opts, params) {
       })
       .then(function (count) {
         return count;
-      })
-      ;
+      });
   }
 
   function getRecords() {
     var fieldsFilter = {};
     fieldsFilter[params.associationName] = true;
 
-      return model
-      .findById(params.recordId, {include : params.associationName})
+    return model
+      .findById(params.recordId)
       .then(function (record) {
-            return new P(function (resolve, reject) {
-                record[params.associationName].apply(this, [{
-                    limit: getLimit(),
-                    skip: getSkip()
-                }, function(err, results){
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve(results);
-                    }
-                }]);
-            });
-    });
+        return record[params.associationName].apply(this, [{
+          limit: getLimit(),
+          skip: getSkip(),
+          include: getIncludes()
+        }]);
+      })
+      .then(function (records) {
+        return P.map(records, function (record) {
+          return record.toJSON();
+        });
+      });
   }
 
   function hasPagination() {
@@ -57,14 +65,8 @@ function HasManyFinder(model, association, opts, params) {
   }
 
   this.perform = function () {
-    return P.all([
-        count(),
-        getRecords()
-        ])
-    .then(function(results){
-        return {count : results[0], records: results[1]};
-    });
+    return P.all([count(), getRecords()]);
   };
 }
 
-module.exports = HasManyFinder;
+module.exports = HasManyGetter;

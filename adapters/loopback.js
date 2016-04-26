@@ -1,22 +1,12 @@
 'use strict';
 var _ = require('lodash');
 var P = require('bluebird');
-var Inflector = require('inflected');
 
-module.exports = function (model, opts) {
+module.exports = function (model) {
   var fields = [];
 
-  // FIXME - Map loopback types to the 4 forest admin recognized types
   function getTypeFor(type) {
-    if (type === 'date') {
-      return 'Date';
-    } else if (type === 'boolean') {
-      return 'Boolean';
-    } else if (type === 'number') {
-      return 'Number';
-    } else if (type === 'any') {
-      return 'String';
-    } else if (type === 'geopoint') {
+    if (type === 'GeoPoint') {
       return 'String';
     } else {
       return type;
@@ -34,16 +24,12 @@ module.exports = function (model, opts) {
     }
   }
 
-  function getInverseOf(association) {
-    return association.modelFrom.modelName;
-  }
-  
   function getReferenceType(association) {
-      return association.modelTo.modelName + '.' + association.keyFrom;
+    return association.modelTo.modelName + '.' + association.keyFrom;
   }
 
   function getSchemaForColumn(fieldName, type) {
-    var schema = { field: fieldName, type: type.name };
+    var schema = { field: fieldName, type: getTypeFor(type) };
     return schema;
   }
 
@@ -52,38 +38,37 @@ module.exports = function (model, opts) {
       field: association.name,
       type: getTypeForAssociation(association),
       reference: getReferenceType(association),
-      inverseOf: null//getInverseOf(association)
+      inverseOf: null
     };
 
     return schema;
   }
-  
-  var idKey = 'id';
+
+  var idField = 'id';
+
   var columns = P
     .each(_.keys(model.definition.properties), function (columnName) {
       var column = model.definition.properties[columnName];
       var schema = getSchemaForColumn(columnName, column.type);
-      if (typeof column.id !== 'undefined' && column.id ) {
-          idKey = columnName;
+
+      if (typeof column.id !== 'undefined' && column.id) {
+        idField = columnName;
       }
+
       fields.push(schema);
     });
 
   var associations = P
     .each(_.values(model.relations), function (association) {
-      var schema = getSchemaForAssociation(association);
-      fields.push(schema);
+      fields.push(getSchemaForAssociation(association));
     });
 
-  return P.all([
-      columns,
-      associations
-      ])
+  return P.all([columns, associations])
     .then(function () {
       return {
         name: model.modelName,
         fields: fields,
-        idKey: idKey
+        idField: idField
       };
     });
 };
