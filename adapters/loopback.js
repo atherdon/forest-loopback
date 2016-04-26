@@ -29,7 +29,7 @@ module.exports = function (model) {
   }
 
   function getSchemaForColumn(fieldName, type) {
-    var schema = { field: fieldName, type: getTypeFor(type) };
+    var schema = { field: fieldName, type: getTypeFor(type.name) };
     return schema;
   }
 
