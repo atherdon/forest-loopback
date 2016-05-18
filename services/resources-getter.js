@@ -41,7 +41,8 @@ function ResourcesGetter(model, opts, params) {
       include : getIncludes()
     };
 
-    if (getOrder().length !== 0) { queryParams.order = getOrder(); }
+    var order = getOrder();
+    if (order.length !== 0) { queryParams.order = order; }
 
     return model
       .find(queryParams)
