@@ -4,43 +4,67 @@ var OperatorValueParser = require('./operator-value-parser');
 
 // jshint sub: true
 function PieStatGetter(model, params, opts) {
-  function getAggregateField() {
-    return params['aggregate_field'] || 'id';
+  function getAggregate() {
+    if (params.aggregate === 'Count') {
+      return 'COUNT(*)';
+    } else {
+      return `SUM("${getFieldAggregate()}")`;
+    }
+  }
+
+  function getColumnName(field) {
+    if (field === 'createdAt') { return 'createdat'; }
+    if (field === 'updatedAt') { return 'updatedat'; }
+    return model.definition.rawProperties[field].postgresql.columnName;
+  }
+
+  function getFieldAggregate() {
+    // jshint sub: true
+    let aggregateField = params['aggregate_field'] || 'id';
+    return getColumnName(aggregateField);
+  }
+
+  function getFieldGroupBy() {
+    return getColumnName(params['group_by_field']);
   }
 
   function getFilters() {
-    var filters = {};
-
     if (params.filters) {
+      let filters = [];
       params.filters.forEach(function (filter) {
-        filters[filter.field] = new OperatorValueParser(opts).perform(model,
-          filter.field, filter.value);
+        filters.push(new OperatorValueParser().perform(model,
+          filter.field, filter.value, true));
       });
+      return filters.join(' AND ');
+    } else {
+      return null;
     }
+  }
 
-    return filters;
+  function createSQLRequest() {
+    const table = model.settings.postgresql.table;
+    const filters = getFilters();
+
+    let sql = `SELECT ${getAggregate()}, "${getFieldGroupBy()}" FROM ${table}`;
+    if (filters) { sql += ` WHERE ${filters}`; }
+    sql += ` GROUP BY "${getFieldGroupBy()}"`;
+    return sql;
   }
 
   this.perform = function () {
-    return model.findAll({
-      attributes: [
-        params['group_by_field'],
-        [
-          opts.sequelize.fn(params['aggregate'],
-          opts.sequelize.col(getAggregateField())),
-          'value'
-        ]
-      ],
-      where: getFilters(),
-      group: [params['group_by_field']]
+    let sql = createSQLRequest();
+
+    return new P(function (resolve, reject) {
+      model.dataSource.connector.query(sql, null, function (error, results) {
+        if (error) { return reject(error); }
+        resolve(results);
+      });
     })
     .then(function (records) {
-      return P.map(records, function (record) {
-        record = record.toJSON();
-
+      return P.map(records, function(record) {
         return {
-          key: String(record[params['group_by_field']]),
-          value: record.value
+          key: String(record[getFieldGroupBy()]),
+          value: record[params.aggregate.toLowerCase()]
         };
       });
     })

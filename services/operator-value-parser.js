@@ -2,8 +2,7 @@
 var moment = require('moment');
 
 function OperatorValueParser() {
-  this.perform = function (model, fieldName, value) {
-    var ret = null;
+  this.perform = function (model, fieldName, value, sqlFormat) {
 
     function isIntervalDateValue(value) {
       return ['yesterday', 'lastWeek', 'last2Weeks', 'lastMonth',
@@ -41,46 +40,108 @@ function OperatorValueParser() {
           break;
       }
 
-      return { $gte: from, $lte: to };
+      if (sqlFormat) {
+        return `"${getColumnName()}" >= ${from} AND "${getColumnName()}" <= ${to}`;
+      } else {
+        return { gte: from, lte: to };
+      }
     }
 
-    if (value[0] === '!') {
-      value = value.substring(1);
-      ret = { $ne: value };
-    } else if (value[0] === '>') {
-      value = value.substring(1);
+    function getValue() {
+      var ret = null;
 
-      if (isIntervalDateValue(value)) {
-        ret = getIntervalDateValue(value);
-      } else {
-        ret = { $gt: value };
-      }
-    } else if (value[0] === '<') {
-      value = value.substring(1);
+      if (value[0] === '!') {
+        value = value.substring(1);
+        ret = { neq: value };
+      } else if (value[0] === '>') {
+        value = value.substring(1);
 
-      if (isIntervalDateValue(value)) {
-        ret = getIntervalDateValue(value);
+        if (isIntervalDateValue(value)) {
+          ret = getIntervalDateValue(value);
+        } else {
+          ret = { gt: value };
+        }
+      } else if (value[0] === '<') {
+        value = value.substring(1);
+
+        if (isIntervalDateValue(value)) {
+          ret = getIntervalDateValue(value);
+        } else {
+          ret = { lt: value };
+        }
+      } else if (value[0] === '*' && value[value.length - 1] === '*') {
+        value = value.substring(1, value.length - 1);
+        ret = { like: '%' + value + '%' };
+      } else if (value[0] === '*') {
+        value = value.substring(1);
+        ret = { like: '%' + value };
+      } else if (value[value.length - 1] === '*') {
+        value = value.substring(0, value.length - 1);
+        ret = { like: value + '%' };
+      } else if (value === '$present') {
+        ret = { neq: null };
+      } else if (value === '$blank') {
+        ret = null;
       } else {
-        ret = { $lt: value };
+        ret = value;
       }
-    } else if (value[0] === '*' && value[value.length - 1] === '*') {
-      value = value.substring(1, value.length - 1);
-      ret = { $like: '%' + value + '%' };
-    } else if (value[0] === '*') {
-      value = value.substring(1);
-      ret = { $like: '%' + value };
-    } else if (value[value.length - 1] === '*') {
-      value = value.substring(1);
-      ret = { $like: value + '%' };
-    } else if (value === '$present') {
-      ret = { $ne: null };
-    } else if (value === '$blank') {
-      ret = null;
-    } else {
-      ret = value;
+
+      return ret;
     }
 
-    return ret;
+    function getColumnName() {
+      if (fieldName === 'createdAt') { return 'createdat'; }
+      if (fieldName === 'updatedAt') { return 'updatedat'; }
+      return model.definition.rawProperties[fieldName].postgresql.columnName;
+    }
+
+    function getFieldValue(fieldName, value) {
+      if (model.definition.rawProperties[fieldName].type === 'string') {
+        return `'${value}'`;
+      } else {
+        return value;
+      }
+    }
+
+    function getValueSQL() {
+      if (value[0] === '!') {
+        value = value.substring(1);
+        return `"${getColumnName()}" <> ${getFieldValue(fieldName, value)}`;
+      } else if (value[0] === '>') {
+        value = value.substring(1);
+
+        if (isIntervalDateValue(value)) {
+          return getIntervalDateValue(value);
+        } else {
+          return `"${getColumnName()}" > ${getFieldValue(fieldName, value)}`;
+        }
+      } else if (value[0] === '<') {
+        value = value.substring(1);
+
+        if (isIntervalDateValue(value)) {
+          return getIntervalDateValue(value);
+        } else {
+          return `"${getColumnName()}" < ${getFieldValue(fieldName, value)}`;
+        }
+      } else if (value[0] === '*' && value[value.length - 1] === '*') {
+        value = value.substring(1, value.length - 1);
+        return `"${getColumnName()}" LIKE '%${value}%'`;
+      } else if (value[0] === '*') {
+        value = value.substring(1);
+        return `"${getColumnName()}" LIKE '%${value}'`;
+      } else if (value[value.length - 1] === '*') {
+        value = value.substring(0, value.length - 1);
+        return `"${getColumnName()}" LIKE '${value}%'`;
+      } else if (value === '$present') {
+        return `"${getColumnName()}" IS NOT NULL`;
+      } else if (value === '$blank') {
+        return `"${getColumnName()}" IS NULL`;
+      } else {
+        return `"${getColumnName()}" = ${getFieldValue(fieldName, value)}`;
+      }
+    }
+
+    return sqlFormat ? getValueSQL() : getValue();
   };
 }
 
