@@ -5,13 +5,22 @@ function OperatorValueParser() {
   this.perform = function (model, fieldName, value, sqlFormat) {
 
     function isIntervalDateValue(value) {
-      return ['yesterday', 'lastWeek', 'last2Weeks', 'lastMonth',
-        'last3Months', 'lastYear'].indexOf(value) > -1;
+      return value === 'yesterday' || value.indexOf('last') === 0;
     }
 
     function getIntervalDateValue(value) {
       var from = null;
       var to = null;
+
+      let match = value.match(/^last(\d+)days$/);
+      if (match && match[1]) {
+        from = moment().subtract(match[1], 'days').toDate();
+        if (sqlFormat) {
+          return `"${getColumnName()}" >= ${from}`;
+        } else {
+          return { gte: from };
+        }
+      }
 
       switch (value) {
         case 'yesterday':
