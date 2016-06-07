@@ -6,9 +6,9 @@ var OperatorValueParser = require('./operator-value-parser');
 function PieStatGetter(model, params, opts) {
   function getAggregate() {
     if (params.aggregate === 'Count') {
-      return 'COUNT(*)';
+      return 'COUNT(*) as "value"';
     } else {
-      return `SUM("${getFieldAggregate()}")`;
+      return `SUM("${getFieldAggregate()}") as "value"`;
     }
   }
 
@@ -48,6 +48,7 @@ function PieStatGetter(model, params, opts) {
     let sql = `SELECT ${getAggregate()}, "${getFieldGroupBy()}" FROM ${table}`;
     if (filters) { sql += ` WHERE ${filters}`; }
     sql += ` GROUP BY "${getFieldGroupBy()}"`;
+    sql += ` ORDER BY "value" DESC`;
     return sql;
   }
 
@@ -64,7 +65,7 @@ function PieStatGetter(model, params, opts) {
       return P.map(records, function(record) {
         return {
           key: String(record[getFieldGroupBy()]),
-          value: record[params.aggregate.toLowerCase()]
+          value: record['value']
         };
       });
     })
