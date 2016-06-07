@@ -28,11 +28,6 @@ module.exports = function (model) {
     return association.modelTo.modelName + '.' + association.keyFrom;
   }
 
-  function getSchemaForColumn(fieldName, type) {
-    var schema = { field: fieldName, type: getTypeFor(type.name) };
-    return schema;
-  }
-
   function getSchemaForAssociation(association) {
     var schema = {
       field: association.name,
@@ -49,13 +44,24 @@ module.exports = function (model) {
   var columns = P
     .each(_.keys(model.definition.properties), function (columnName) {
       var column = model.definition.properties[columnName];
-      var schema = getSchemaForColumn(columnName, column.type);
+      var schema = { field: columnName };
+
+      if (column.type[0]) {
+        schema.type = getTypeFor(column.type[0].name);
+      } else if (column.type) {
+        schema.type = getTypeFor(column.type.name);
+      }
 
       if (typeof column.id !== 'undefined' && column.id) {
         idField = columnName;
       }
 
       fields.push(schema);
+
+      if (!schema.type) {
+        console.error("Forest Error: Missing type information for the column " +
+          schema.field + " of model " + model.definition.name);
+      }
     });
 
   var associations = P
