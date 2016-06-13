@@ -14,6 +14,22 @@ function HasManyGetter(model, association, opts, params) {
       .value();
   }
 
+  function getOrder() {
+    var sort = [];
+    if (params.sort) {
+      var order = 'ASC';
+
+      if (params.sort[0] === '-') {
+        params.sort = params.sort.substring(1);
+        order = 'DESC';
+      }
+
+      sort.push(params.sort + ' ' + order);
+    }
+
+    return sort;
+  }
+
   function count() {
     return model.findById(params.recordId)
       .then(function (record) {
@@ -28,14 +44,18 @@ function HasManyGetter(model, association, opts, params) {
     var fieldsFilter = {};
     fieldsFilter[params.associationName] = true;
 
+    let queryParams = {
+      limit: getLimit(),
+      skip: getSkip(),
+      include: getIncludes()
+    };
+    const order = getOrder();
+    if (order.length !== 0) { queryParams.order = order; }
+
     return model
       .findById(params.recordId)
       .then(function (record) {
-        return record[params.associationName].apply(this, [{
-          limit: getLimit(),
-          skip: getSkip(),
-          include: getIncludes()
-        }]);
+        return record[params.associationName].apply(this, [queryParams]);
       })
       .then(function (records) {
         return P.map(records, function (record) {
