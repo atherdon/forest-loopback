@@ -1,5 +1,4 @@
-# Forest Express/Sequelize connector
-[![Build Status](https://travis-ci.org/ForestAdmin/forest-express-loopback.svg?branch=master)](https://travis-ci.org/ForestAdmin/forest-express-loopback)
+# Forest Loopback connector
 The official Loopback liana for Forest.
 
 ## Installation
