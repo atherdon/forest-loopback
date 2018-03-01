@@ -1,11 +1,10 @@
-# Forest Express/Sequelize connector
-[![Build Status](https://travis-ci.org/ForestAdmin/forest-express-loopback.svg?branch=master)](https://travis-ci.org/ForestAdmin/forest-express-loopback)
+# Forest Loopback connector
 The official Loopback liana for Forest.
 
 ## Installation
 
 1. Run `$ npm install forest-loopback --save`
-2. Add the following code to your `app.js` file:
+2. Add the following code to your `server/server.js` file:
 ```javascript
 app.use(require('forest-loopback').init({
   modelsDir: __dirname + '/../common/models',  // The directory where all of your Loopback models are defined.
