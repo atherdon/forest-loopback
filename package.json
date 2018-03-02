@@ -32,7 +32,7 @@
     "winston": "^1.0.2"
   },
   "devDependencies": {
-    "chai": "^2.3.0",
+    "chai": "^4.1.2",
     "mocha": "^2.2.5"
   }
 }
