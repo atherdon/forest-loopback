@@ -27,7 +27,7 @@
     "moment": "^2.10.6",
     "node-uuid": "^1.4.3",
     "semver": "^5.5.0",
-    "stripe": "^5.5.0",
+    "stripe": "^6.6.0",
     "superagent": "^3.8.2",
     "winston": "^2.4.0"
   },
